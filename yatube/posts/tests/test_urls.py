@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 
@@ -76,6 +77,7 @@ class StaticURLTests(TestCase):
             f'/posts/{StaticURLTests.post.id}/edit/': 'posts/create_post.html',
             '/create/': 'posts/create_post.html',
         }
+        cache.clear()
         for url, template in templates_url_names.items():
             with self.subTest(address=url):
                 response = self.auth_client.get(url)

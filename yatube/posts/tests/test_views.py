@@ -60,7 +60,7 @@ class PostViewsTest(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        super(). tearDownClass
+        super().tearDownClass
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
@@ -70,6 +70,7 @@ class PostViewsTest(TestCase):
 
     def page_obj_in_context(self, context, post=False):
         """Универсальный модуль"""
+        cache.clear()
         if post:
             self.assertIn('post', context)
             first_obj = context['post']
@@ -95,6 +96,7 @@ class PostViewsTest(TestCase):
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
                 'posts/create_post.html'
         }
+        cache.clear()
         for name, template in template_name_pages.items():
             with self.subTest(name=name):
                 response = self.auth_client.get(name)
@@ -198,99 +200,3 @@ class PostViewsTest(TestCase):
         self.assertRedirects(response,
                              '/auth/login/?next=%2Fposts%2F2%2Fcomment%2F')
         self.assertEqual(Comment.objects.count(), comment_count)
-
-
-class PaginatorTest(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user = User.objects.create_user(username='auth')
-        cls.group = Group.objects.create(
-            title='title',
-            slug='slug',
-            description='description'
-        )
-        posts = [
-            Post(
-                text=f'text{i}',
-                author=cls.user,
-                group=cls.group
-            ) for i in range(15)
-        ]
-        Post.objects.bulk_create(posts)
-
-    def setUp(self):
-        self.auth_client = Client()
-        self.auth_client.force_login(self.user)
-
-    def test_first_main_page_correct(self):
-        response = self.auth_client.get(reverse('posts:main_page'))
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_second_main_page_correct(self):
-        response = self.auth_client.get(reverse('posts:main_page') + '?page=2')
-        self.assertEqual(len(response.context['page_obj']), 6)
-
-    def test_first_group_list_correct(self):
-        response = self.auth_client.get(reverse('posts:group_list',
-                                                kwargs={'slug': 'slug'}))
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_second_group_list_correct(self):
-        response = self.auth_client.get(reverse(
-                                        'posts:group_list',
-                                        kwargs={'slug': 'slug'}) + '?page=2')
-        self.assertEqual(len(response.context['page_obj']), 5)
-
-    def test_first_profile_page_correct(self):
-        response = self.auth_client.get(reverse('posts:profile',
-                                                kwargs={'username': self.user}
-                                                ))
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-    def test_second_profile_page_correct(self):
-        response = self.auth_client.get(reverse(
-                                        'posts:profile',
-                                        kwargs={'username': self.user}
-                                        ) + '?page=2')
-        self.assertEqual(len(response.context['page_obj']), 5)
-
-
-class TestCache(TestCase):
-    """Проверка кэша"""
-    def test_cache(self):
-        response = self.client.get(reverse('posts:main_page'))
-        self.assertEqual(len(response.context['page_obj']), 0)
-        user = User.objects.create_user(username='auth')
-        Post.objects.create(
-            text='TestText',
-            author=user
-        )
-        self.assertEqual(len(response.context['page_obj']), 0)
-        cache.clear()
-        self.assertEqual(len(response.context['page_obj']), 0)
-
-
-class TestFollow(TestCase):
-    """Проверка подписок"""
-    @classmethod
-    def setUpClass(cls):
-        cls.user = User.objects.create_user(username='follower')
-        cls.author = User.objects.create_user(username='following')
-
-    def setUp(self):
-        self.client1 = Client()
-        self.client1.force_login()
-        self.client2 = Client()
-        self.client2.force_login()
-
-    def test_follow(self):
-        follow_count = self.user.following.count()
-        response = self.client2.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.author.username}
-            )
-        )
-        self.assertRedirects(response, 'posts:profile_follow')
-        self.assertEqual(self.user.following.count(), follow_count)
