@@ -11,7 +11,7 @@ class TestFollow(TestCase):
     def setUpClass(cls):
         cls.user = User.objects.create_user(username='follower')
         cls.author = User.objects.create_user(username='following')
-    
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass
