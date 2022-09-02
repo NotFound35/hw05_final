@@ -271,7 +271,6 @@ class TestCache(TestCase):
         self.assertEqual(len(response.context['page_obj']), 0)
 
 
-
 class TestFollow(TestCase):
     """Проверка подписок"""
     @classmethod
