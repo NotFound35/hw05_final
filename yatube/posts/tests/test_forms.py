@@ -26,7 +26,7 @@ class PostCreateFormTest(TestCase):
         self.auth_user.force_login(self.user)
 
     def test_create_post_form(self):
-        form_data={
+        form_data = {
             'text': 'TestText',
             'group': self.group.id,
             'author': self.user
