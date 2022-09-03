@@ -112,7 +112,7 @@ class PostViewsTest(TestCase):
             'posts:group_list',
             kwargs={'slug': self.group1.slug}))
         first_obj = response.context.get('group')
-        self.assertEqual(first_obj, Group.objects.get(id=1))
+        self.assertEqual(first_obj, Group.objects.get(id=self.group1.id))
         self.page_obj_in_context(response.context)
 
     def test_profile_show_correct_context(self):

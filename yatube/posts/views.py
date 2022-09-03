@@ -7,9 +7,6 @@ from .forms import CommentForm, PostForm
 from .models import Comment, Follow, Group, Post, User
 from yatube.settings import POST_COUNT
 
-# POST_COUNT = 10
-# Create your views here.
-
 
 @cache_page(20)
 def index(request):
@@ -128,8 +125,8 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    # posts = Post.objects.select_related('author', 'group')
-    posts = Post.objects.filter(author__following__user=request.user)
+    posts = Post.objects.filter(
+        author__following__user=request.user).select_related('author', 'group')
     page = Paginator(posts, POST_COUNT)
     page_number = request.GET.get('page')
     page_obj = page.get_page(page_number)

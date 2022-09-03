@@ -32,6 +32,14 @@ class TestFollow(TestCase):
         self.assertEqual(Follow.objects.all().count(), follow_count + 1)
 
     def test_unfollow(self):
+        follow_count = Follow.objects.all().count()
+        self.client1.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.author.username}
+            )
+        )
+        self.assertEqual(Follow.objects.all().count(), follow_count + 1)
         follow_cnt = Follow.objects.all().count()
         self.client2.get(
             reverse(

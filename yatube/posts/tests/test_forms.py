@@ -15,10 +15,6 @@ class PostCreateFormTest(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(username='auth')
-        # cls.post = Post.objects.create(
-        #     text='test-text',
-        #     author=cls.user
-        # )
         cls.group = Group.objects.create(
             title='title',
             slug='slug',
@@ -30,14 +26,15 @@ class PostCreateFormTest(TestCase):
         self.auth_user.force_login(self.user)
 
     def test_create_post_form(self):
+        form_data={
+            'text': 'TestText',
+            'group': self.group.id,
+            'author': self.user
+        }
         post_count = Post.objects.count()
         response = self.auth_user.post(
             reverse('posts:post_create'),
-            data={
-                'text': 'TestText',
-                'group': self.group.id,
-                'author': self.user
-            },
+            data=form_data,
             follow=True
         )
 
@@ -46,7 +43,7 @@ class PostCreateFormTest(TestCase):
                                                kwargs={'username': self.user}))
         self.assertEqual(Post.objects.count(), post_count + 1)
         post = Post.objects.first()
-        self.assertEqual(post.text, 'TestText')
+        self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.group, self.group)
         self.assertEqual(post.author, self.user)
 
@@ -61,24 +58,20 @@ class PostCreateFormTest(TestCase):
             slug='NewSlug',
             description='NewDescription'
         )
+        form_data = {
+            'text': 'NewText',
+            'group': group_2.id
+        }
         post_count = Post.objects.count()
-        # form_data = {
-        #     'text': 'test-text',
-        #     'group': self.group.id
-        # }
-
         response = self.auth_user.post(
             reverse('posts:post_edit', args=(post.id,)),
-            data={
-                'text': 'NewText',
-                'group': group_2.id
-            },
+            data=form_data,
             follow=True
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(Post.objects.count(), post_count)
         post = Post.objects.first()
-        self.assertEqual(post.text, 'NewText')
+        self.assertEqual(post.text, form_data['text'])
         self.assertEqual(post.author, self.user),
         self.assertEqual(post.group, group_2)
 
