@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..forms import CommentForm, PostForm
+from ..forms import CommentForm
 from ..models import Comment, Group, Post
 
 User = get_user_model()
@@ -49,7 +49,6 @@ class PostCreateFormTest(TestCase):
         self.assertEqual(post.text, 'TestText')
         self.assertEqual(post.group, self.group)
         self.assertEqual(post.author, self.user)
-
 
     def test_edit_post_form(self):
         post = Post.objects.create(

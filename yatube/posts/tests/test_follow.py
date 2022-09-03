@@ -23,7 +23,7 @@ class TestFollow(TestCase):
 
     def test_follow(self):
         follow_count = Follow.objects.all().count()
-        response = self.client1.get(
+        self.client1.get(
             reverse(
                 'posts:profile_follow',
                 kwargs={'username': self.author.username}
@@ -33,7 +33,7 @@ class TestFollow(TestCase):
 
     def test_unfollow(self):
         follow_cnt = Follow.objects.all().count()
-        response = self.client2.get(
+        self.client2.get(
             reverse(
                 'posts:profile_unfollow',
                 kwargs={'username': self.author.username}
