@@ -5,8 +5,9 @@ from django.views.decorators.cache import cache_page
 
 from .forms import CommentForm, PostForm
 from .models import Comment, Follow, Group, Post, User
+from yatube.settings import POST_COUNT
 
-POST_COUNT = 10
+# POST_COUNT = 10
 # Create your views here.
 
 
@@ -127,7 +128,7 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    posts = Post.objects.filter(author__following__user=request.user)
+    posts = Post.objects.select_related('author', 'group')
     page = Paginator(posts, POST_COUNT)
     page_number = request.GET.get('page')
     page_obj = page.get_page(page_number)
@@ -151,5 +152,5 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     user = request.user
-    Follow.objects.get(user=user, author__username=username).delete()
+    Follow.objects.filter(user=user, author__username=username).delete()
     return redirect('posts:profile', username=username)

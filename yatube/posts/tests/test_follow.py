@@ -1,8 +1,7 @@
-from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-
-User = get_user_model()
+from ..models import User
+from ..models import Follow
 
 
 class TestFollow(TestCase):
@@ -23,12 +22,21 @@ class TestFollow(TestCase):
         self.client2.force_login(self.author)
 
     def test_follow(self):
-        follow_count = self.user.following.count()
-        response = self.client2.get(
+        follow_count = Follow.objects.all().count()
+        response = self.client1.get(
             reverse(
                 'posts:profile_follow',
                 kwargs={'username': self.author.username}
             )
         )
-        self.assertRedirects(response, '/profile/following/')
-        self.assertEqual(self.user.following.count(), follow_count)
+        self.assertEqual(Follow.objects.all().count(), follow_count + 1)
+
+    def test_unfollow(self):
+        follow_cnt = Follow.objects.all().count()
+        response = self.client2.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': self.author.username}
+            )
+        )
+        self.assertEqual(Follow.objects.all().count(), follow_cnt)

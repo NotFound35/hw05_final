@@ -2,9 +2,11 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Group, Post
+from ..models import Group, Post, User
 
-User = get_user_model()
+from yatube.settings import POST_COUNT
+
+POSTS = 15
 
 
 class PaginatorTest(TestCase):
@@ -22,7 +24,7 @@ class PaginatorTest(TestCase):
                 text=f'text{i}',
                 author=cls.user,
                 group=cls.group
-            ) for i in range(15)
+            ) for i in range(POSTS)
         ]
         Post.objects.bulk_create(posts)
 
@@ -32,7 +34,7 @@ class PaginatorTest(TestCase):
 
     def test_first_main_page_correct(self):
         response = self.auth_client.get(reverse('posts:main_page'))
-        self.assertEqual(len(response.context['page_obj']), 10)
+        self.assertEqual(len(response.context['page_obj']), POST_COUNT)
 
     def test_second_main_page_correct(self):
         response = self.auth_client.get(reverse('posts:main_page') + '?page=2')
@@ -41,7 +43,7 @@ class PaginatorTest(TestCase):
     def test_first_group_list_correct(self):
         response = self.auth_client.get(reverse('posts:group_list',
                                                 kwargs={'slug': 'slug'}))
-        self.assertEqual(len(response.context['page_obj']), 10)
+        self.assertEqual(len(response.context['page_obj']), POST_COUNT)
 
     def test_second_group_list_correct(self):
         response = self.auth_client.get(reverse(
@@ -53,7 +55,7 @@ class PaginatorTest(TestCase):
         response = self.auth_client.get(reverse('posts:profile',
                                                 kwargs={'username': self.user}
                                                 ))
-        self.assertEqual(len(response.context['page_obj']), 10)
+        self.assertEqual(len(response.context['page_obj']), POST_COUNT)
 
     def test_second_profile_page_correct(self):
         response = self.auth_client.get(reverse(

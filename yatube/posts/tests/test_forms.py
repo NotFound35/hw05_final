@@ -14,12 +14,11 @@ class PostCreateFormTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.form = PostForm()
         cls.user = User.objects.create_user(username='auth')
-        cls.post = Post.objects.create(
-            text='test-text',
-            author=cls.user
-        )
+        # cls.post = Post.objects.create(
+        #     text='test-text',
+        #     author=cls.user
+        # )
         cls.group = Group.objects.create(
             title='title',
             slug='slug',
@@ -32,13 +31,13 @@ class PostCreateFormTest(TestCase):
 
     def test_create_post_form(self):
         post_count = Post.objects.count()
-        form_data = {
-            'text': 'text',
-            'group': self.group.id
-        }
         response = self.auth_user.post(
             reverse('posts:post_create'),
-            data=form_data,
+            data={
+                'text': 'TestText',
+                'group': self.group.id,
+                'author': self.user
+            },
             follow=True
         )
 
@@ -46,26 +45,43 @@ class PostCreateFormTest(TestCase):
         self.assertRedirects(response, reverse('posts:profile',
                                                kwargs={'username': self.user}))
         self.assertEqual(Post.objects.count(), post_count + 1)
-        self.assertTrue(Post.objects.filter(
-            author=self.user,
-            text=form_data['text']).exists())
+        post = Post.objects.first()
+        self.assertEqual(post.text, 'TestText')
+        self.assertEqual(post.group, self.group)
+        self.assertEqual(post.author, self.user)
+
 
     def test_edit_post_form(self):
+        post = Post.objects.create(
+            text='TestText',
+            group=self.group,
+            author=self.user
+        )
+        group_2 = Group.objects.create(
+            title='NewGroup',
+            slug='NewSlug',
+            description='NewDescription'
+        )
         post_count = Post.objects.count()
-        form_data = {
-            'text': 'test-text',
-            'group': self.group.id
-        }
+        # form_data = {
+        #     'text': 'test-text',
+        #     'group': self.group.id
+        # }
 
         response = self.auth_user.post(
-            reverse('posts:post_edit', args=[self.post.id]),
-            data=form_data,
+            reverse('posts:post_edit', args=(post.id,)),
+            data={
+                'text': 'NewText',
+                'group': group_2.id
+            },
             follow=True
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(Post.objects.count(), post_count)
-        self.assertEqual(self.post.text, form_data['text'])
-        self.assertEqual(self.group.id, form_data['group'])
+        post = Post.objects.first()
+        self.assertEqual(post.text, 'NewText')
+        self.assertEqual(post.author, self.user),
+        self.assertEqual(post.group, group_2)
 
 
 class CommentTest(TestCase):
@@ -93,13 +109,12 @@ class CommentTest(TestCase):
 
     def test_create_comment_form(self):
         comment_count = Comment.objects.count()
-        form_data = {
-            'text': 'CommentText',
-            'author': self.user
-        }
         response = self.auth_user.post(
             reverse('posts:add_comment', args=[self.post.id]),
-            data=form_data,
+            data={
+                'text': 'CommentText',
+                'author': self.user
+            },
             follow=True
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -107,3 +122,6 @@ class CommentTest(TestCase):
             'posts:post_detail', kwargs={'post_id': self.post.id}
         ))
         self.assertEqual(Comment.objects.count(), comment_count + 1)
+        comment = Comment.objects.first()
+        self.assertEqual(comment.text, 'CommentText')
+        self.assertEqual(comment.author, self.user)
